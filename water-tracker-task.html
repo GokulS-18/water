@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Water Tracker</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg1:#e7f5ff;--bg2:#d0ebff;--card:#ffffffd9;--tx:#0b2540;--mu:#5c7a99;--bd:#cfe3f5;--ac:#1c7ed6;--ac2:#4dabf7;--ok:#2f9e44;--glass:#ffffff80;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#08162a;--bg2:#0d2a4a;--card:#112742d9;--tx:#e8f3ff;--mu:#8fb0d1;--bd:#23456b;--ac:#4dabf7;--ac2:#74c0fc;--ok:#69db7c;--glass:#ffffff14;color-scheme:dark}}
+:root[data-theme="dark"]{--bg1:#08162a;--bg2:#0d2a4a;--card:#112742d9;--tx:#e8f3ff;--mu:#8fb0d1;--bd:#23456b;--ac:#4dabf7;--ac2:#74c0fc;--ok:#69db7c;--glass:#ffffff14;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;overflow-x:hidden}
+.wrap{max-width:980px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;animation:down .7s both}
+h1{margin:0;font-size:clamp(22px,4vw,30px)}h1 span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.sub{color:var(--mu);font-size:14px}
+button{font:inherit;color:var(--tx);cursor:pointer;border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:10px 14px;transition:transform .15s,box-shadow .2s;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button:hover{transform:translateY(-3px);box-shadow:0 8px 18px #1c7ed633}button:active{transform:scale(.92)}
+.main{display:grid;grid-template-columns:minmax(260px,1fr) 1.2fr;gap:18px;margin-top:18px}
+@media(max-width:700px){.main{grid-template-columns:1fr}}
+.card{background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--bd);border-radius:22px;padding:18px;animation:up .7s both}
+.tankbox{display:flex;flex-direction:column;align-items:center;gap:14px}
+.tank{position:relative;width:min(220px,58vw);aspect-ratio:1/2;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 10px 20px #1c7ed644)}.tank svg{width:100%;height:100%;display:block;overflow:visible}.wv{animation:wv2 3s linear infinite}.wv.b{animation-duration:5s;animation-direction:reverse}.bb{animation:rise 3.5s ease-in infinite}
+.water{transform:translateY(400px);transition:transform 1.4s cubic-bezier(.3,1.2,.5,1)}
+.wave{position:absolute;left:0;right:0;top:-16px;height:20px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20'%3E%3Cpath d='M0 10Q25 0 50 10T100 10V20H0Z' fill='%234dabf7'/%3E%3C/svg%3E") repeat-x;background-size:100px 20px;animation:wv 3s linear infinite}
+.wave.b{top:-12px;opacity:.55;animation-duration:5s;animation-direction:reverse}
+.bub{position:absolute;bottom:-10px;width:8px;height:8px;border-radius:50%;background:#ffffff99;animation:rise 4s linear infinite}
+.pct{position:absolute;left:0;right:0;top:44%;display:flex;flex-direction:column;align-items:center;font-weight:800;font-size:clamp(24px,5vw,34px);text-shadow:0 0 6px #0b4a8a,0 2px 12px #0b4a8a;color:#fff;z-index:2;pointer-events:none}
+.pct small{font-size:13px;font-weight:600;opacity:.9}
+.drop{position:fixed;width:14px;height:20px;border-radius:50% 50% 50% 50%/65% 65% 35% 35%;background:var(--ac2);z-index:20;pointer-events:none;animation:fall .7s ease-in forwards}
+.bar{width:100%;height:16px;background:var(--bd);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--ac2),var(--ac));transition:width 1.2s cubic-bezier(.3,1.2,.5,1);position:relative;overflow:hidden}
+.bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,#fff8,transparent);animation:shim 2s infinite}
+.bar.done i{background:linear-gradient(90deg,#51cf66,#2f9e44)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.stat{background:var(--glass);border:1px solid var(--bd);border-radius:16px;padding:10px 4px;transition:transform .3s}
+.stat.pop{animation:pop .5s}
+.stat b{display:block;font-size:clamp(18px,3.4vw,24px);font-variant-numeric:tabular-nums}.stat span{font-size:12px;color:var(--mu)}
+.msg{margin:14px 0;padding:12px 14px;border-radius:16px;background:var(--glass);border:1px solid var(--bd);text-align:center;font-weight:600;min-height:50px}
+.msg.in{animation:pop .5s}.msg.win{background:linear-gradient(90deg,#2f9e44,#1c7ed6);color:#fff;border:0;animation:pop .6s,glow 1.8s infinite}
+h3{margin:16px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)}
+.adds{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.adds button{padding:14px 4px;font-weight:600;background:linear-gradient(var(--card),var(--glass))}
+.adds button em{display:block;font-size:26px;font-style:normal}.adds button small{color:var(--mu);font-weight:400}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input{font:inherit;color:var(--tx);background:var(--glass);border:1px solid var(--bd);border-radius:12px;padding:10px;width:110px;min-width:0;flex:1}
+input:focus{outline:2px solid var(--ac2)}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.log{list-style:none;margin:0;padding:0;max-height:180px;overflow:auto}
+.log li{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:12px;background:var(--glass);margin-bottom:6px;animation:slide .45s both;transition:all .4s}
+.log li.out{opacity:0;transform:translateX(60px)}
+.log button{padding:2px 9px;border-radius:99px}
+.empty{color:var(--mu);text-align:center;padding:10px}
+.danger.arm{background:#e03131;color:#fff;border-color:#e03131;animation:shake .4s}
+.rip{position:absolute;border-radius:50%;background:#4dabf766;transform:scale(0);animation:rip .6s linear;pointer-events:none}
+.conf{position:fixed;top:-12px;width:10px;height:14px;z-index:30;pointer-events:none;animation:cf 2.6s ease-in forwards}
+.hb{fill:var(--glass);stroke:var(--ac2);stroke-width:4;stroke-linejoin:round}
+#ua,#fa,#ga{transition:transform .9s ease-in-out}#ga{opacity:0}
+.plus{position:absolute;top:-8px;right:-16px;font-weight:800;font-size:20px;color:var(--ac);opacity:0;pointer-events:none;z-index:3}.plus.go{animation:plus 2.8s ease-out}
+.tank.gulp svg{animation:gulp .5s}
+@keyframes gulp{40%{transform:scale(1.04)}}
+@keyframes plus{0%{opacity:0;transform:translateY(20px) scale(.6)}15%{opacity:1;transform:scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translateY(-30px)}}
+@keyframes down{from{opacity:0;transform:translateY(-24px)}}@keyframes up{from{opacity:0;transform:translateY(30px)}}
+@keyframes bob{50%{transform:translateY(-5px) rotate(8deg)}}@keyframes float{50%{transform:translateY(-8px)}}
+@keyframes wv2{to{transform:translateX(-100px)}}@keyframes rise{to{transform:translateY(-60px);opacity:0}}
+@keyframes fall{to{transform:translateY(var(--dy));opacity:.2}}@keyframes shim{to{transform:translateX(100%)}from{transform:translateX(-100%)}}
+@keyframes pop{0%{transform:scale(.85)}60%{transform:scale(1.08)}}@keyframes slide{from{opacity:0;transform:translateX(-30px)}}
+@keyframes glow{50%{box-shadow:0 0 24px #4dabf7}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes rip{to{transform:scale(4);opacity:0}}@keyframes cf{to{transform:translate(var(--dx),105vh) rotate(720deg)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition-duration:.01s!important}}
+</style></head><body><div class="wrap">
+<header><div><h1><span>💧</span> My Water Tracker</h1><div class="sub" id="date"></div></div><button id="th" aria-label="Toggle theme">🌓</button></header>
+<div class="main">
+ <section class="card tankbox" style="animation-delay:.15s">
+  <div class="tank" id="tank"><svg viewBox="0 0 200 400" role="img" aria-label="Human body filling with water"><defs><path id="bp" d="M86 66L114 66L114 78C130 79 140 84 144 94L144 190L146 260L138 380C137 392 116 392 114 380L106 270L100 250L94 270L86 380C84 392 63 392 62 380L54 260L56 190L54 126L46 192C44 202 31 200 32 190L40 108C44 88 60 80 86 78Z"/><circle id="hd" cx="100" cy="38" r="26"/><clipPath id="bc"><use href="#bp"/><use href="#hd"/></clipPath><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74c0fc"/><stop offset=".5" stop-color="#339af0"/><stop offset="1" stop-color="#1864ab"/></linearGradient></defs><g fill="var(--glass)"><use href="#bp"/><use href="#hd"/></g><g clip-path="url(#bc)"><g class="water" id="water"><g class="wv b" opacity=".5"><path transform="translate(-30 -5)" fill="#74c0fc" d="M-200 0Q-175 -8 -150 0T-100 0T-50 0T0 0T50 0T100 0T150 0T200 0T250 0T300 0V420H-200Z"/></g><g class="wv"><path fill="url(#wg)" d="M-200 0Q-175 -8 -150 0T-100 0T-50 0T0 0T50 0T100 0T150 0T200 0T250 0T300 0V420H-200Z"/></g><g id="bubs"></g></g></g><g fill="none" stroke="var(--ac2)" stroke-width="4" stroke-linejoin="round"><use href="#bp"/><use href="#hd"/></g><circle cx="91" cy="34" r="3" fill="var(--tx)"/><circle cx="109" cy="34" r="3" fill="var(--tx)"/><path d="M92 46Q100 53 108 46" fill="none" stroke="var(--tx)" stroke-width="3" stroke-linecap="round"/>
+<g transform="translate(140 92)"><g id="ua"><rect class="hb" x="-8" y="-8" width="16" height="50" rx="8"/><g transform="translate(0 42)"><g id="fa"><rect class="hb" x="-7" y="-7" width="14" height="61" rx="7"/><g transform="translate(0 54)"><g id="ga"><g id="gq"><clipPath id="gc"><path d="M-10-30L10-30L7 2L-7 2Z"/></clipPath><path d="M-10-30L10-30L7 2L-7 2Z" fill="#ffffff66" stroke="var(--tx)" stroke-width="1.5"/><g clip-path="url(#gc)"><rect id="gwat" x="-10" y="-28" width="20" height="30" fill="#339af0" style="transform-box:fill-box;transform-origin:bottom"/></g></g></g></g></g></g></g></g>
+</svg><div class="plus" id="plus"></div><div class="pct"><span id="pct">0%</span><small id="goalTxt"></small></div></div>
+  <div class="bar" id="bar"><i id="fill"></i></div>
+ </section>
+ <section class="card" style="animation-delay:.3s">
+  <div class="stats">
+   <div class="stat" id="s1"><b id="tot">0</b><span>Drunk</span></div>
+   <div class="stat" id="s2"><b id="rem">0</b><span>Remaining</span></div>
+   <div class="stat" id="s3"><b id="cnt">0</b><span>Drinks</span></div>
+  </div>
+  <div class="msg" id="msg"></div>
+  <h3>Add water</h3>
+  <div class="adds">
+   <button data-ml="250"><em>🥛</em>Glass<br><small>250 ml</small></button>
+   <button data-ml="500"><em>🍶</em>Bottle<br><small>500 ml</small></button>
+   <button data-ml="100"><em>💦</em>Sip<br><small>100 ml</small></button>
+  </div>
+  <div class="row" style="margin-top:10px"><input id="cus" type="number" min="1" max="2000" placeholder="Custom ml"><button id="addc">＋ Add</button></div>
+  <h3>Daily goal</h3>
+  <div class="row" id="chips"></div>
+  <div class="row" style="margin-top:8px"><input id="gl" type="number" step="0.1" min="0.5" max="10" placeholder="Litres"><button id="setg">Set goal</button><button class="danger" id="reset">↺ Reset day</button></div>
+  <h3>Today’s log</h3><ul class="log" id="log"></ul>
+ </section>
+</div></div>
+<script>
+const $=s=>document.querySelector(s);
+let S={goal:2000,date:new Date().toDateString(),e:[]};
+try{const x=JSON.parse(localStorage.getItem('wt')||'null');if(x&&x.date===S.date)S=x;else if(x)S.goal=x.goal}catch(_){}
+const save=()=>{try{localStorage.setItem('wt',JSON.stringify(S))}catch(_){}};
+const fmt=ml=>ml>=1000?(ml/1000).toFixed(2).replace(/\.?0+$/,'')+' L':ml+' ml';
+const total=()=>S.e.reduce((a,b)=>a+b.ml,0);
+function count(el,to){const f=+el.dataset.v||0,t0=performance.now();el.dataset.v=to;(function s(n){const k=Math.min(1,(n-t0)/800),e=1-Math.pow(1-k,3);el.textContent=fmt(Math.round(f+(to-f)*e));if(k<1)requestAnimationFrame(s)})(t0)}
+function pop(id){const e=$(id);e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop')}
+const MSG=[[0,'Let’s start! Your first glass is waiting 💧'],[25,'Great start — keep sipping! 🌱'],[50,'Halfway there! You’re doing amazing 💪'],[75,'Almost done — just a little more! 🚀'],[100,'🎉 Goal reached! Fantastic hydration today! 🏆']];
+let lastMsg='';
+function render(first){const t=total(),p=Math.min(100,Math.round(t/S.goal*100)),r=Math.max(0,S.goal-t);
+ $('#water').style.transform='translateY('+(388-Math.min(1,t/S.goal)*376)+'px)';$('#fill').style.width=p+'%';$('#bar').classList.toggle('done',p>=100);
+ $('#pct').textContent=p+'%';$('#goalTxt').textContent='of '+fmt(S.goal);
+ count($('#tot'),t);count($('#rem'),r);$('#cnt').textContent=S.e.length;
+ const m=[...MSG].reverse().find(x=>p>=x[0])[1]+(t>S.goal?' (+'+fmt(t-S.goal)+' bonus!)':'');
+ if(m!==lastMsg){const e=$('#msg');e.textContent=m;e.classList.remove('in');void e.offsetWidth;e.classList.add('in');e.classList.toggle('win',p>=100);lastMsg=m}
+ document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',+c.dataset.g===S.goal));
+ const L=$('#log');if(!S.e.length)L.innerHTML='<li class="empty" style="display:block">No drinks yet today</li>';
+ else if(first)L.innerHTML=S.e.slice().reverse().map(li).join('')}
+const li=x=>`<li data-id="${x.id}"><span>💧 ${fmt(x.ml)} · ${x.t}</span><button aria-label="Remove">✕</button></li>`;
+function drops(){const tb=$('#tank').getBoundingClientRect();for(let i=0;i<7;i++){const d=document.createElement('div');d.className='drop';d.style.left=tb.left+tb.width/2+(Math.random()-.5)*70+'px';d.style.top=tb.top-90+'px';d.style.setProperty('--dy',90+Math.random()*60+'px');d.style.animationDelay=i*60+'ms';document.body.appendChild(d);setTimeout(()=>d.remove(),1200)}}
+function confetti(){const c=['#4dabf7','#51cf66','#ffd43b','#ff8787','#b197fc'];for(let i=0;i<70;i++){const d=document.createElement('div');d.className='conf';d.style.left=Math.random()*100+'vw';d.style.background=c[i%5];d.style.setProperty('--dx',(Math.random()-.5)*200+'px');d.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),3500)}}
+function add(ml){ml=Math.round(ml);if(!(ml>0)||ml>2000){$('#cus').animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],300);return}
+ const was=total()>=S.goal;S.e.push({id:Date.now()+Math.random(),ml,t:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});save();const dk=drink(ml);
+ const L=$('#log');if(L.querySelector('.empty'))L.innerHTML='';L.insertAdjacentHTML('afterbegin',li(S.e[S.e.length-1]));
+ dk.then(()=>{render();pop('#s1');pop('#s2');pop('#s3');if(!was&&total()>=S.goal)confetti()})}
+document.querySelectorAll('.adds button').forEach(b=>b.onclick=()=>add(+b.dataset.ml));
+$('#addc').onclick=()=>{add(+$('#cus').value);$('#cus').value=''};
+$('#log').onclick=e=>{const b=e.target.closest('button');if(!b)return;const l=b.parentNode;l.classList.add('out');const id=l.dataset.id;setTimeout(()=>{S.e=S.e.filter(x=>String(x.id)!==id);save();l.remove();render()},400)};
+function goal(g){g=Math.round(g);if(!(g>=500&&g<=10000)){$('#gl').animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],300);return}S.goal=g;save();render();pop('#s2')}
+$('#chips').innerHTML=[1500,2000,2500,3000].map(g=>`<button class="chip" data-g="${g}">${g/1000} L</button>`).join('');
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>goal(+c.dataset.g));
+$('#setg').onclick=()=>{goal(+$('#gl').value*1000);$('#gl').value=''};
+let arm;$('#reset').onclick=function(){if(!this.classList.contains('arm')){this.classList.add('arm');this.textContent='Tap again to confirm';arm=setTimeout(()=>{this.classList.remove('arm');this.textContent='↺ Reset day'},3000);return}
+ clearTimeout(arm);this.classList.remove('arm');this.textContent='↺ Reset day';S.e=[];save();$('#log').innerHTML='';render()};
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const r=b.getBoundingClientRect(),s=document.createElement('span'),z=Math.max(r.width,r.height);s.className='rip';s.style.cssText=`width:${z/3}px;height:${z/3}px;left:${e.clientX-r.left-z/6}px;top:${e.clientY-r.top-z/6}px`;b.appendChild(s);setTimeout(()=>s.remove(),600)});
+const wait=ms=>new Promise(r=>setTimeout(r,ms));let q=Promise.resolve();
+function tf(id,d,t){const e=$(id);e.style.transition='transform '+t+'s ease-in-out,opacity .3s';e.style.transform='rotate('+d+'deg)'}
+async function run(ml,res){const s=.7+Math.min(ml,500)/500*.7,gw=$('#gwat'),ga=$('#ga'),pl=$('#plus'),tk=$('#tank');
+ $('#gq').style.transform='scale('+s+')';gw.style.transition='none';gw.style.transform='scaleY(1)';
+ pl.textContent='+'+ml+' ml';pl.classList.remove('go');void pl.offsetWidth;pl.classList.add('go');
+ ga.style.opacity=1;tf('#ua',27,.9);tf('#fa',143,.9);tf('#ga',-170,.9);await wait(950);
+ gw.style.transition='transform 1.6s linear';gw.style.transform='scaleY(0)';tf('#ga',-210,.7);await wait(1750);
+ res();tk.classList.remove('gulp');void tk.offsetWidth;tk.classList.add('gulp');await wait(350);
+ tf('#ga',0,.9);tf('#ua',0,.9);tf('#fa',0,.9);await wait(950);ga.style.opacity=0}
+const drink=ml=>new Promise(res=>{q=q.then(()=>run(ml,res))});
+$('#th').onclick=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).colorScheme==='dark'?'light':'dark'};
+for(let i=0;i<14;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('class','bb');c.setAttribute('cx',45+Math.random()*110);c.setAttribute('cy',30+Math.random()*320);c.setAttribute('r',1.5+Math.random()*3);c.setAttribute('fill','#fff');c.setAttribute('fill-opacity','.6');c.style.animationDelay=Math.random()*3.5+'s';$('#bubs').appendChild(c)}
+$('#date').textContent=new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+setTimeout(()=>render(true),400);
+</script></body></html>
